@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>পরীক্ষার হল - শিক্ষার্থী উপস্থিতি তথ্য সংগ্রহ</title>
+<!-- PWA: হোম স্ক্রিনে ইনস্টল করার জন্য -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3059d6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="পরীক্ষার হল">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Baloo+Da+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f5fc;
+    --surface: #ffffff;
+    --surface-2: #f5f7fc;
+    --border: #e4e8f3;
+    --border-strong: #ccd3e6;
+    --text: #171a26;
+    --text-muted: #666c80;
+    --primary: #3059d6;
+    --primary-dark: #1f3fa8;
+    --primary-light: #5b7ff0;
+    --primary-bg: #e9eeff;
+    --accent: #7b4dd8;
+    --accent-2: #16b3a3;
+    --success: #14875a;
+    --success-bg: #e4f6ed;
+    --warning: #9a6c05;
+    --warning-bg: #fdf2d8;
+    --danger: #c73c55;
+    --danger-bg: #fbe8ec;
+    --shadow: 0 1px 2px rgba(20,24,40,.06), 0 4px 14px rgba(20,24,40,.05);
+    --shadow-lift: 0 8px 24px rgba(40,50,100,.10), 0 2px 6px rgba(40,50,100,.06);
+    --radius: 18px;
+    --radius-sm: 12px;
+    --font-display: "Baloo Da 2", "Hind Siliguri", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11131c; --surface: #191c28; --surface-2: #212537; --border: #2f3448;
+      --border-strong: #3d4359; --text: #eef0f8; --text-muted: #9aa0b8;
+      --primary: #7c9dff; --primary-dark: #a8c0ff; --primary-light: #99b4ff; --primary-bg: #1e2a51; --accent: #b190ff; --accent-2: #3fd6c4;
+      --success: #4bcb8e; --success-bg: #14352a; --warning: #e0b64a; --warning-bg: #372d16;
+      --danger: #f28ba0; --danger-bg: #3b1f27;
+      --shadow: 0 1px 2px rgba(0,0,0,.5), 0 4px 14px rgba(0,0,0,.35);
+      --shadow-lift: 0 10px 26px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11131c; --surface: #191c28; --surface-2: #212537; --border: #2f3448;
+    --border-strong: #3d4359; --text: #eef0f8; --text-muted: #9aa0b8;
+    --primary: #7c9dff; --primary-dark: #a8c0ff; --primary-light: #99b4ff; --primary-bg: #1e2a51; --accent: #b190ff; --accent-2: #3fd6c4;
+    --success: #4bcb8e; --success-bg: #14352a; --warning: #e0b64a; --warning-bg: #372d16;
+    --danger: #f28ba0; --danger-bg: #3b1f27;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 4px 14px rgba(0,0,0,.35);
+    --shadow-lift: 0 10px 26px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hind Siliguri", "Noto Sans Bengali", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: #fff;
+    padding: 18px 16px 0 16px;
+    position: sticky; top: 0; z-index: 30;
+    box-shadow: 0 4px 18px rgba(30,45,110,.22);
+  }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  h1 { font-family: var(--font-display); font-size: 18px; margin: 0 0 4px 0; font-weight: 700; letter-spacing: -.2px; display: flex; align-items: center; gap: 7px; }
+  .subtitle { font-size: 12.5px; margin: 0 0 14px 0; opacity: .85; }
+  .tabs { display: flex; gap: 4px; background: rgba(0,0,0,.1); padding: 4px; border-radius: 14px 14px 0 0; }
+  .tab-btn {
+    flex: 1; background: transparent; border: none;
+    padding: 11px 8px; font-size: 14px; font-weight: 700; color: rgba(255,255,255,.78);
+    cursor: pointer; font-family: inherit;
+    border-radius: 10px;
+    transition: background .2s ease, color .2s ease;
+  }
+  .tab-btn.active { background: var(--surface); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+  main { max-width: 960px; margin: 0 auto; padding: 18px 16px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+  }
+  .card h2 {
+    font-family: var(--font-display); font-size: 15.5px; margin: 0 0 16px 0; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .card h2 .hint { font-family: "Hind Siliguri", sans-serif; font-weight: 500; font-size: 12px; color: var(--text-muted); flex-basis: 100%; }
+  label { display: block; font-size: 12.5px; color: var(--text-muted); margin-bottom: 7px; font-weight: 700; }
+  select, input[type=text], input[type=date], input[type=number] {
+    width: 100%; padding: 13px 14px; border-radius: var(--radius-sm); min-height: 48px;
+    border: 1.5px solid var(--border-strong); background: var(--surface-2);
+    color: var(--text); font-size: 15.5px; font-family: inherit;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    -webkit-appearance: none; appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23666c80'%3e%3cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 18px;
+    padding-left: 14px; padding-right: 38px;
+  }
+  input[type=number] { text-align: center; font-weight: 700; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  select:focus, input:focus { outline: none; border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 4px var(--primary-bg); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .row2 > div { min-width: 0; }
+  .field { margin-bottom: 14px; }
+  .status-banner {
+    display: flex; align-items: center; gap: 9px; padding: 12px 14px;
+    border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 2px; line-height: 1.5; font-weight: 600;
+  }
+  .status-banner.exists { background: var(--success-bg); color: var(--success); }
+  .status-banner.new { background: var(--warning-bg); color: var(--warning); }
+
+  .class-card {
+    position: relative; overflow: hidden;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 16px; margin-bottom: 14px; background: var(--surface);
+    box-shadow: var(--shadow);
+    transition: box-shadow .2s ease, border-color .2s ease;
+  }
+  .class-card::before {
+    content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 4px;
+    background: linear-gradient(180deg, var(--primary), var(--accent));
+  }
+  .class-card:focus-within { border-color: var(--primary); box-shadow: var(--shadow-lift); }
+  .class-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 13px; gap: 10px; }
+  .class-name-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .class-icon {
+    flex: none; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 13.5px; color: #fff;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+  }
+  .class-name { font-weight: 800; font-size: 15px; }
+  .class-total {
+    font-size: 12px; font-weight: 800; color: var(--primary);
+    background: var(--primary-bg); padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+  }
+  .subject-row { margin-bottom: 12px; }
+  .religion-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .religion-item label { font-size: 11.5px; text-align: center; margin-bottom: 6px; }
+  .general-field label { font-size: 12px; }
+  .no-exam-note {
+    font-size: 12.5px; color: var(--text-muted); padding: 10px 12px; background: var(--surface-2);
+    border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); text-align: center;
+  }
+  .add-class-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .add-class-row select { flex: 1; min-width: 0; }
+  .add-class-btn {
+    flex: none; padding: 0 18px; min-height: 48px; border-radius: var(--radius-sm);
+    border: none; background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff; font-weight: 800; font-size: 14px; font-family: inherit; cursor: pointer;
+    transition: transform .1s ease, opacity .15s ease;
+  }
+  .add-class-btn:active { transform: scale(.97); }
+  .add-class-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .class-remove-btn {
+    flex: none; width: 30px; height: 30px; border-radius: 999px;
+    border: 1.5px solid var(--border-strong); background: var(--surface-2); color: var(--danger);
+    font-size: 13px; font-weight: 800; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .class-remove-btn:hover { background: var(--danger-bg); border-color: var(--danger); }
+  .class-cards-empty {
+    font-size: 12.5px; color: var(--text-muted); padding: 14px; background: var(--surface-2);
+    border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); text-align: center; margin-bottom: 4px;
+  }
+  @media (max-width: 560px) {
+    .religion-grid { grid-template-columns: repeat(2, 1fr); }
+    .row2 { grid-template-columns: 1fr; }
+  }
+  /* ---------- number stepper ---------- */
+  .stepper { display: flex; align-items: stretch; gap: 6px; }
+  .stepper input[type=number] { flex: 1; min-width: 0; padding-left: 4px; padding-right: 4px; }
+  .stepper-btn {
+    flex: none; width: 44px; min-height: 48px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-strong); background: var(--surface-2); color: var(--primary);
+    font-size: 19px; font-weight: 800; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+    transition: transform .1s ease, background .15s ease;
+  }
+  .stepper-btn:active { transform: scale(.92); background: var(--primary-bg); }
+  .religion-item .stepper { gap: 4px; }
+  .religion-item .stepper-btn { width: 30px; min-height: 40px; font-size: 15px; border-radius: 8px; }
+  .religion-item .stepper input[type=number] { padding-left: 2px; padding-right: 2px; font-size: 14px; min-height: 40px; }
+
+  .room-total-line {
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(135deg, var(--primary-bg), var(--surface-2));
+    color: var(--primary);
+    padding: 14px 16px; border-radius: var(--radius-sm); font-weight: 800; font-size: 14px; margin-top: 6px;
+    border: 1.5px solid var(--primary-bg);
+  }
+  .room-total-line span { font-family: var(--font-display); font-size: 22px; }
+  .submit-bar { position: sticky; bottom: 0; background: linear-gradient(to bottom, transparent, var(--bg) 30%); padding: 14px 0 6px 0; }
+  button.primary {
+    width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; border: none; padding: 16px;
+    border-radius: var(--radius-sm); font-size: 15.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+    box-shadow: 0 6px 18px rgba(48,89,214,.35);
+    transition: transform .1s ease, box-shadow .15s ease;
+  }
+  button.primary:active { transform: scale(.98); box-shadow: 0 3px 10px rgba(48,89,214,.3); }
+  button.primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+  button.ghost {
+    width: 100%; background: var(--surface-2); color: var(--primary); border: 1.5px solid var(--border-strong);
+    padding: 14px; border-radius: var(--radius-sm); font-size: 14.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+    transition: transform .1s ease, background .15s ease;
+  }
+  button.ghost:active { transform: scale(.98); background: var(--primary-bg); }
+  .msg { text-align: center; font-size: 13px; margin-top: 10px; min-height: 18px; font-weight: 600; }
+  .msg.ok { color: var(--success); }
+  .msg.err { color: var(--danger); }
+
+  .grand-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 15px 10px; text-align: center; box-shadow: var(--shadow);
+  }
+  .stat-num { font-size: 23px; font-weight: 800; color: var(--primary); }
+  .stat-label { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+  @media (max-width: 520px) { .stat-num { font-size: 18px; } }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 7px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--text-muted); font-weight: 800; font-size: 11.5px; background: var(--surface-2); }
+  td:first-child, th:first-child { text-align: left; }
+  .table-scroll { overflow-x: auto; border-radius: 11px; border: 1px solid var(--border); }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+  .badge.done { background: var(--success-bg); color: var(--success); }
+  .badge.pending { background: var(--danger-bg); color: var(--danger); }
+  .empty-note { text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px 0; }
+  .help-list { font-size: 13.2px; line-height: 1.75; color: var(--text-muted); margin: 0; padding-right: 18px; }
+  .help-list li { margin-bottom: 4px; }
+  footer { text-align: center; color: var(--text-muted); font-size: 11.5px; padding: 20px 16px 0 16px; }
+
+  .step {
+    border: 1px solid var(--border); border-radius: 13px; padding: 14px;
+    margin-bottom: 12px; background: var(--surface-2);
+    border-right: 4px solid var(--primary);
+  }
+  .step.locked { opacity: .45; border-right-color: var(--border-strong); }
+  .step-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .step-num {
+    width: 25px; height: 25px; border-radius: 50%; background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; flex: none;
+  }
+  .step.locked .step-num { background: var(--border-strong); color: var(--text-muted); }
+  .step-title { font-weight: 800; font-size: 14.5px; }
+  .step-pick { font-size: 12.5px; color: var(--success); font-weight: 700; margin-top: 8px; }
+  .big-num input { font-size: 26px !important; font-weight: 800 !important; padding: 14px !important; letter-spacing: 1px; }
+  .entry-table td .del {
+    background: var(--danger-bg); color: var(--danger); border: none; border-radius: 8px;
+    padding: 4px 9px; font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  .room-chip {
+    display: inline-block; background: var(--primary); color: #fff; font-weight: 800;
+    padding: 4px 12px; border-radius: 999px; font-size: 13px;
+  }
+  /* ---------- Print report (styling active always, display gated) ---------- */
+  #printReport { display: none; font-size: 11px; background:#fff; color:#000; }
+  #printReport h2 { font-size: 15px; margin: 0 0 2px 0; text-align: center; }
+  #printReport .p-sub { text-align: center; font-size: 11px; margin: 0 0 10px 0; }
+  #printReport h3 { font-size: 12.5px; margin: 14px 0 6px 0; border-right: 4px solid #000; padding-right: 7px; }
+  #printReport table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+  #printReport th, #printReport td { border: 1px solid #666; padding: 3px 5px; text-align: center; }
+  #printReport th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #printReport td.l, #printReport th.l { text-align: right; }
+  #printReport tr { page-break-inside: avoid; }
+  #printReport .sign-row { display: flex; justify-content: space-between; margin-top: 34px; font-size: 11px; }
+  #printReport .sign-row div { border-top: 1px solid #000; padding-top: 4px; width: 30%; text-align: center; }
+  #printReport .page-break { page-break-before: always; }
+  #printReport.pdf-capturing { display: block; position: fixed; left: -9999px; top: 0; width: 1400px; padding: 20px; z-index: -1; }
+  @media print {
+    @page { size: A4 landscape; margin: 12mm; }
+    body { background: #fff !important; color: #000 !important; padding: 0; }
+    body > header, body > main, body > footer { display: none !important; }
+    #printReport { display: block !important; }
+  }
+
+  /* ---------- exam day selector ---------- */
+  .day-bar { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 0 0 12px 0; -ms-overflow-style: none; scrollbar-width: none; }
+  .day-bar::-webkit-scrollbar { display: none; }
+  .day-chip {
+    flex: none; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff;
+    padding: 7px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    white-space: nowrap; transition: background .15s ease, transform .1s ease;
+  }
+  .day-chip.active { background: #fff; color: var(--primary); border-color: #fff; }
+  .day-chip:active { transform: scale(.94); }
+  .day-add-btn {
+    flex: none; border: 1.5px dashed rgba(255,255,255,.5); background: transparent; color: #fff;
+    padding: 7px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .day-add-form {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    background: rgba(255,255,255,.12); border-radius: 12px; padding: 10px; margin: 0 0 12px 0;
+  }
+  .day-add-form input { min-height: 40px; padding: 8px 10px; font-size: 13.5px; }
+  .day-add-form input[type=date] { flex: none; width: 148px; }
+  .day-add-form input[type=text] { flex: 1; min-width: 110px; }
+  .day-add-form button { flex: none; min-height: 40px; padding: 8px 14px; border-radius: 10px; border: none; font-weight: 800; font-family: inherit; cursor: pointer; }
+  .day-add-form .day-save-btn { background: #fff; color: var(--primary); }
+  .day-add-form .day-cancel-btn { background: rgba(255,255,255,.2); color: #fff; }
+
+  /* ---------- unsaved / draft indicator ---------- */
+  .draft-note { font-size: 12px; color: var(--warning); font-weight: 700; text-align: center; margin-top: 8px; display:none; align-items:center; justify-content:center; gap:6px; }
+  .draft-note.show { display: flex; }
+  .dot-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex: none; animation: dotPulse 1.2s ease-in-out infinite; }
+  @keyframes dotPulse { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+
+  /* ---------- install banner ---------- */
+  .install-banner {
+    display: none; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--primary-bg); color: var(--primary-dark); border: 1.5px solid var(--primary); 
+    border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 700;
+  }
+  .install-banner.show { display: flex; }
+  .install-banner button {
+    flex: none; background: var(--primary); color: #fff; border: none; padding: 9px 14px; border-radius: 10px;
+    font-weight: 800; font-size: 12.5px; cursor: pointer; font-family: inherit;
+  }
+  .install-banner .dismiss { background: transparent; color: var(--primary-dark); padding: 9px 8px; }
+
+  /* ---------- visual polish ---------- */
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+  .card { animation: fadeInUp .35s ease both; }
+  button.primary, button.ghost, .room-chip-cell { transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease; }
+  button.primary:active, button.ghost:active { transform: scale(.97); }
+  .stat-box { transition: transform .15s ease; }
+  .stat-box:active { transform: scale(.95); }
+  .tab-btn { transition: background .2s ease, color .2s ease; }
+
+  /* ---------- top progress bar ---------- */
+  .progress-wrap { margin-top:12px; padding-bottom:14px; }
+  .progress-track { height:8px; background: rgba(255,255,255,.28); border-radius:999px; overflow:hidden; }
+  .progress-fill { height:100%; background:#fff; border-radius:999px; transition: width .5s ease; width:0%; }
+  .progress-label { font-size:11px; color:rgba(255,255,255,.9); margin-top:6px; font-weight:700; }
+
+  /* ---------- room progress grid ---------- */
+  .room-grid { display:grid; grid-template-columns: repeat(6,1fr); gap:8px; }
+  @media (max-width:560px) { .room-grid { grid-template-columns: repeat(5,1fr); } }
+  .room-chip-cell {
+    aspect-ratio:1; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; cursor:pointer; border:none; font-family:inherit;
+  }
+  .room-chip-cell:active { transform: scale(.88); }
+  .room-chip-cell.done { background: var(--success-bg); color: var(--success); }
+  .room-chip-cell.pending { background: var(--surface-2); color: var(--text-muted); border:1px solid var(--border-strong); }
+
+  /* ---------- charts ---------- */
+  .chart-box { position:relative; max-width:100%; }
+
+  /* ---------- school badge (logo + name) ---------- */
+  .school-badge { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px; text-align: center; }
+  .school-badge > div { display: flex; flex-direction: column; align-items: center; }
+  .school-logo {
+    width: 78px; height: 78px; border-radius: 50%; flex: none; object-fit: contain;
+    filter: drop-shadow(0 3px 10px rgba(0,0,0,.4));
+  }
+  .school-name {
+    font-family: var(--font-display); font-size: 23px; font-weight: 800; letter-spacing: -.1px;
+    margin: 0 0 4px 0; line-height: 1.25;
+  }
+  .app-title {
+    font-size: 15px; font-weight: 700; opacity: .92; margin: 0; display: flex; align-items: center; gap: 6px;
+    transition: max-height .25s ease, opacity .2s ease, margin .25s ease; max-height: 26px; overflow: hidden;
+  }
+  .app-title .icon { width: 19px; height: 19px; }
+  header.compact .school-badge { margin-bottom: 0; gap: 12px; }
+  header.compact .school-logo { width: 46px; height: 46px; }
+  header.compact .school-name { font-size: 18px; margin-bottom: 0; }
+  header.compact .app-title { max-height: 0; opacity: 0; margin: 0; overflow: hidden; }
+
+
+  @media (max-width: 380px) {
+    main { padding: 14px 12px; }
+    .card { padding: 15px; border-radius: 14px; }
+    h1 { font-size: 16.5px; }
+    .class-card { padding: 13px; }
+    .stepper-btn { width: 40px; min-height: 44px; font-size: 17px; }
+    select, input[type=text], input[type=date], input[type=number] { font-size: 15px; padding: 12px 12px; }
+    .room-total-line span { font-size: 19px; }
+  }
+
+  /* ================= modernization pass ================= */
+
+  /* line icons */
+  .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  h1 .icon, .tab-btn .icon, h2 .icon, button .icon, .app-title .icon { width: 17px; height: 17px; margin-right: 6px; }
+  .stat-icon .icon, .install-banner .icon, .status-banner .icon { width: 18px; height: 18px; margin-right: 6px; vertical-align: -4px; }
+  .stat-icon .icon { margin-right: 0; }
+  .msg-icon-pop .icon { margin-right: 5px; }
+  h1 { gap: 8px; }
+
+  /* header: mesh / aurora backdrop */
+  header { position: sticky; overflow: hidden; }
+  header::before, header::after {
+    content: ""; position: absolute; border-radius: 50%; filter: blur(46px); opacity: .3; pointer-events: none; z-index: 0;
+  }
+  header::before { width: 240px; height: 240px; background: #ffffff; top: -130px; right: -70px; }
+  header::after  { width: 200px; height: 200px; background: var(--accent-2); bottom: -120px; left: -50px; }
+  .header-inner { position: relative; z-index: 1; }
+
+  /* theme-aware glass tokens */
+  :root { --glass-bg: rgba(255,255,255,.55); --glass-border: rgba(255,255,255,.65); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --glass-bg: rgba(30,34,50,.55); --glass-border: rgba(255,255,255,.09); }
+  }
+  :root[data-theme="dark"] { --glass-bg: rgba(30,34,50,.55); --glass-border: rgba(255,255,255,.09); }
+
+  .install-banner {
+    background: var(--glass-bg); backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1.5px solid var(--glass-border);
+  }
+  .day-add-form { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+  /* class-card: soft tint + glowing icon badge */
+  .class-card { background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 120%); }
+  .class-icon { box-shadow: 0 4px 12px rgba(48,89,214,.35); }
+
+  /* sticky header compact-on-scroll */
+  header { transition: padding .25s ease, box-shadow .25s ease; }
+  header.compact { padding-top: 10px; box-shadow: 0 4px 22px rgba(30,45,110,.3); }
+  header.compact .subtitle { max-height: 0; opacity: 0; margin: 0; overflow: hidden; }
+  header.compact h1 { font-size: 15.5px; margin-bottom: 10px; }
+  .subtitle { transition: max-height .25s ease, opacity .2s ease, margin .25s ease; max-height: 30px; overflow: hidden; }
+
+  /* tab content fade-in */
+  .tab-fade { animation: fadeInUp .28s ease; }
+
+  /* success message pop */
+  .msg-icon-pop { display: inline-flex; animation: popIn .4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+
+  /* stat box icons */
+  .stat-icon {
+    width: 34px; height: 34px; border-radius: 10px; margin: 0 auto 8px auto;
+    background: var(--primary-bg); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* skeleton shimmer while first Firebase snapshot loads */
+  @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  body.is-loading .stat-num { color: transparent; position: relative; }
+  body.is-loading .stat-num::after {
+    content: ""; position: absolute; inset: 2px 14px; border-radius: 6px;
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--border-strong) 37%, var(--surface-2) 63%);
+    background-size: 400% 100%; animation: shimmer 1.4s ease infinite;
+  }
+  body.is-loading #roomProgressGrid { min-height: 96px; position: relative; }
+  body.is-loading #roomProgressGrid::after {
+    content: ""; position: absolute; inset: 0; border-radius: 10px;
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--border-strong) 37%, var(--surface-2) 63%);
+    background-size: 400% 100%; animation: shimmer 1.4s ease infinite;
+  }
+
+  /* stepper: a touch more bounce */
+  .stepper-btn { transition: transform .12s cubic-bezier(.34,1.56,.64,1), background .15s ease; }
+  .stepper-btn:active { transform: scale(.86); }
+</style>
+</head>
+<body class="is-loading">
+
+
+<header>
+  <div class="header-inner">
+    <div class="school-badge">
+      <img src="logo.png" alt="প্রবর্তক স্কুল এন্ড কলেজ" class="school-logo">
+      <div>
+        <h1 class="school-name">প্রবর্তক স্কুল এন্ড কলেজ</h1>
+        <p class="app-title"><svg class="icon" viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg> পরীক্ষার হল — উপস্থিতি তথ্য সংগ্রহ</p>
+      </div>
+    </div>
+    <p class="subtitle">শ্রেণিভিত্তিক বিষয় ও ধর্মভিত্তিক উপস্থিতি (কক্ষ ১–৩০)</p>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabEntryBtn" onclick="switchTab('entry')"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg> ডাটা এন্ট্রি</button>
+      <button class="tab-btn" id="tabSummaryBtn" onclick="switchTab('summary')"><svg class="icon" viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg> সারাংশ ও প্রিন্ট</button>
+    </div>
+    <div class="day-bar" id="dayBar" style="margin-top:12px;"></div>
+    <div class="day-add-form" id="dayAddForm" style="display:none;">
+      <input type="date" id="newDayDate">
+      <input type="text" id="newDayLabel" placeholder="দিনের নাম (যেমনঃ ১ম দিন) — ঐচ্ছিক">
+      <button type="button" class="day-save-btn" onclick="confirmAddExamDay()">যোগ করুন</button>
+      <button type="button" class="day-cancel-btn" onclick="toggleAddDayForm(false)">বাতিল</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="globalProgressFill"></div></div>
+      <div class="progress-label" id="globalProgressLabel">০/৩০ কক্ষ সম্পন্ন (০%)</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="install-banner" id="installBanner">
+    <span id="installBannerText"><svg class="icon" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg> এই অ্যাপটি আপনার ফোনের হোম স্ক্রিনে ইনস্টল করে নিন — পরের বার সরাসরি আইকনে চাপ দিয়ে খুলতে পারবেন।</span>
+    <div style="display:flex; gap:6px; flex:none;">
+      <button type="button" onclick="doInstallPrompt()" id="installBannerBtn">ইনস্টল করুন</button>
+      <button type="button" class="dismiss" onclick="dismissInstallBanner()"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+  </div>
+
+  <div id="dbStatusBanner"></div>
+
+  <!-- ENTRY TAB -->
+  <div id="entryTab">
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> কক্ষ ও পর্যবেক্ষক তথ্য <span class="hint">নির্বাচিত পরীক্ষার দিনঃ <b id="activeDayLabel">—</b></span></h2>
+      <div class="field">
+        <label>কক্ষ নং নির্বাচন করুন</label>
+        <select id="roomSelect"></select>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>পর্যবেক্ষক শিক্ষকের নাম</label>
+        <input type="text" id="invigilatorName" placeholder="আপনার নাম লিখুন" oninput="onFormInput()">
+      </div>
+      <div id="statusBanner"></div>
+      <div class="draft-note" id="draftNote"><span class="dot-pulse"></span> <span id="draftNoteText">স্থানীয়ভাবে খসড়া সংরক্ষিত হয়েছে — এখনো সার্ভারে সংরক্ষণ করা হয়নি।</span></div>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg> <span class="room-chip" id="roomChip">কক্ষ ০</span> — শ্রেণি যোগ করুন <span class="hint">যে শ্রেণির পরীক্ষা এই কক্ষে চলছে, তালিকা থেকে বেছে "যোগ করুন" চাপুন — একটার পর একটা</span></h2>
+      <div class="add-class-row">
+        <select id="addClassSelect"></select>
+        <button type="button" class="add-class-btn" id="addClassBtn" onclick="addClassCard()"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg> যোগ করুন</button>
+      </div>
+      <div id="classCards"></div>
+      <div id="noClassNote" class="class-cards-empty" style="display:none;">এখনো কোনো শ্রেণি যোগ করা হয়নি। উপরের তালিকা থেকে একটি শ্রেণি বেছে "যোগ করুন" চাপুন।</div>
+      <div class="room-total-line">
+        <div>এই কক্ষে মোট উপস্থিত</div>
+        <span id="roomTotal">০</span>
+      </div>
+    </div>
+
+    <div class="submit-bar">
+      <button class="primary" id="submitBtn" onclick="submitRoomData()"><svg class="icon" viewBox="0 0 24 24"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg> সব শ্রেণির তথ্য একসাথে সংরক্ষণ করুন</button>
+      <div class="msg" id="submitMsg"></div>
+    </div>
+
+  </div>
+
+  <!-- SUMMARY TAB -->
+
+  <div id="summaryTab" style="display:none;">
+
+    <div class="grand-grid">
+      <div class="stat-box">
+        <div class="stat-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="stat-num" id="statTotalPresent">০</div>
+        <div class="stat-label">মোট উপস্থিত শিক্ষার্থী</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon"><svg class="icon" viewBox="0 0 24 24"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="stat-num" id="statRoomsDone">০/৩০</div>
+        <div class="stat-label">কক্ষের এন্ট্রি সম্পন্ন</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon"><svg class="icon" viewBox="0 0 24 24"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg></div>
+        <div class="stat-num" id="statSubjects">০</div>
+        <div class="stat-label">বিষয়ের সংখ্যা</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> কক্ষ অগ্রগতি <span class="hint">সবুজ = জমা হয়েছে, ধূসর = বাকি আছে — চাপ দিলে সরাসরি সেই কক্ষে যাবেন</span></h2>
+      <div class="room-grid" id="roomProgressGrid"></div>
+      <p class="empty-note" id="pendingRoomsNote" style="text-align:right; padding-top:12px;"></p>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg> চিত্রে উপস্থিতি সারাংশ</h2>
+      <div class="chart-box"><canvas id="classChart" height="220"></canvas></div>
+      <div class="chart-box" style="margin-top:20px;"><canvas id="religionChart" height="220"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg> সব কক্ষের তথ্য একসাথে প্রিন্ট / এক্সপোর্ট <span class="hint">নির্বাচিত দিনঃ <b id="activeDayLabelSummary">—</b> — অন্য দিনের তথ্য দেখতে উপরের দিন-চিপ থেকে বেছে নিন</span></h2>
+      <div class="row2">
+        <div class="field">
+          <label>প্রতিষ্ঠানের নাম</label>
+          <input type="text" id="schoolName" placeholder="যেমনঃ ... উচ্চ বিদ্যালয়" oninput="saveMeta()">
+        </div>
+        <div class="field">
+          <label>পরীক্ষার নাম</label>
+          <input type="text" id="examName" placeholder="যেমনঃ বার্ষিক পরীক্ষা ২০২৬" oninput="saveMeta()">
+        </div>
+      </div>
+      <button class="ghost" onclick="printAllRooms()"><svg class="icon" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg> সরাসরি প্রিন্ট করুন</button>
+      <button class="primary" style="margin-top:10px;" onclick="exportPdf()"><svg class="icon" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> PDF ডাউনলোড করুন (A4)</button>
+      <button class="ghost" style="margin-top:10px;" onclick="downloadPrintReport()"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> রিপোর্ট ফাইল ডাউনলোড করুন (HTML)</button>
+      <button class="ghost" style="margin-top:10px;" onclick="exportExcel()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg> Excel ফাইল ডাউনলোড করুন (.xlsx)</button>
+      <div class="msg" id="printMsg"></div>
+      <ol class="help-list" style="margin-top:14px;">
+        <li><b>PDF ডাউনলোড করুন</b> বাটনে চাপলে কোনো প্রিন্ট ডায়ালগ ছাড়াই সরাসরি A4 মাপের একটা PDF ফাইল ডিভাইসে সেভ হয়ে যাবে।</li>
+        <li><b>সরাসরি প্রিন্ট</b> বাটনে প্রিন্ট উইন্ডো না খুললে (কিছু মোবাইল/অ্যাপে এটা ব্লক থাকে), তখন <b>রিপোর্ট ফাইল ডাউনলোড করুন</b> বাটনে চাপ দিন — এটি একটি স্বয়ংসম্পূর্ণ HTML ফাইল সেভ করবে, সেটি ব্রাউজারে খুলে সরাসরি প্রিন্ট বা “Save as PDF” করা যাবে।</li>
+        <li><b>Excel ফাইল</b> এ কক্ষভিত্তিক, বিষয়ভিত্তিক ও শ্রেণিভিত্তিক — তিনটা আলাদা শিট থাকবে, হিসাব-নিকাশ বা রেকর্ড রাখার জন্য সুবিধাজনক।</li>
+        <li>কাগজের মাপ <b>A4</b> এবং <b>Landscape (আড়াআড়ি)</b> রাখলে টেবিলগুলো সবচেয়ে সুন্দর আসে — PDF বাটনও একই মাপে তৈরি করে।</li>
+        <li>যেসব কক্ষের তথ্য এখনো জমা হয়নি, রিপোর্টে সেগুলো “তথ্য নেই” হিসেবে দেখাবে — তাই কাদের বাকি আছে তা সহজেই বোঝা যাবে।</li>
+        <li>সব এক্সপোর্ট (PDF/HTML/Excel) সবসময় উপরে <b>নির্বাচিত পরীক্ষার দিনের</b> তথ্য নিয়ে তৈরি হয় — অন্য দিনের রিপোর্ট লাগলে আগে সেই দিনটা বেছে নিন।</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg> বিষয়ভিত্তিক উপস্থিতি</h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th class="l">বিষয়</th><th>শ্রেণি</th><th>ইসলাম</th><th>হিন্দু</th><th>বৌদ্ধ</th><th>খ্রিস্টান</th><th>সাধারণ</th><th>মোট উপস্থিত</th></tr>
+          </thead>
+          <tbody id="subjectSummaryBody"></tbody>
+        </table>
+      </div>
+      <p class="empty-note" id="subjectSummaryEmpty" style="display:none;">এখনো কোনো তথ্য জমা হয়নি।</p>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg> শ্রেণিভিত্তিক সারসংক্ষেপ (সব কক্ষ মিলিয়ে)</h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th class="l">শ্রেণি</th><th>ইসলাম</th><th>হিন্দু</th><th>বৌদ্ধ</th><th>খ্রিস্টান</th><th>সাধারণ</th><th>মোট</th></tr>
+          </thead>
+          <tbody id="classSummaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> কক্ষভিত্তিক তথ্য</h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th class="l">কক্ষ</th><th>৬ষ্ঠ</th><th>৭ম</th><th>৮ম</th><th>৯ম</th><th>১০ম</th><th>মোট</th><th>অবস্থা</th></tr>
+          </thead>
+          <tbody id="roomSummaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><svg class="icon" viewBox="0 0 24 24"><path d="M12 2 3 7l9 5 9-5Z"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/></svg> সর্বমোট ধর্মভিত্তিক উপস্থিতি</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="l">ধর্ম</th><th>মোট শিক্ষার্থী</th></tr></thead>
+          <tbody id="religionSummaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>প্রতিটি কক্ষের পর্যবেক্ষক শিক্ষক এই লিংকে গিয়ে নিজের কক্ষের তথ্য দিতে পারবেন। তথ্য যেকোনো সময় আপডেট/এডিট করা যাবে।</footer>
+
+<div id="printReport"></div>
+
+<!-- Firebase (Realtime Database) — GitHub Pages-এর জন্য প্রয়োজনীয়, নিচে firebase-config.js ফাইলে আপনার প্রজেক্টের তথ্য দিন -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<!-- Chart.js (গ্রাফ) ও SheetJS (Excel এক্সপোর্ট) — GitHub Pages-এ স্বাভাবিকভাবেই কাজ করবে -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+<script>
+/* ---------- line icons (SVG, Lucide-style) ---------- */
+const ICON_PATHS = {
+  graduationCap: '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+  penLine: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+  barChart: '<line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>',
+  mapPin: '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+  bookOpen: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  checkCircle: '<path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  smartphone: '<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
+  alertTriangle: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  wifiOff: '<path d="M12 20h.01"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/><path d="M5 12.859a10 10 0 0 1 5.17-2.69"/><path d="M19 12.859a10 10 0 0 0-2.007-1.523"/><path d="M2 8.82a15 15 0 0 1 4.177-2.643"/><path d="M22 8.82a15 15 0 0 0-11.288-3.764"/><path d="m2 2 20 20"/>',
+  sparkles: '<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/>',
+  printer: '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+  fileText: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  layoutGrid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+  home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  checkSquare: '<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>'
+};
+function icon(name, cls) {
+  const d = ICON_PATHS[name] || '';
+  return `<svg class="icon${cls ? ' ' + cls : ''}" viewBox="0 0 24 24">${d}</svg>`;
+}
+
+const CLASSES = [
+  { key: "6",  label: "৬ষ্ঠ শ্রেণি",  short: "৬ষ্ঠ" },
+  { key: "7",  label: "৭ম শ্রেণি",   short: "৭ম" },
+  { key: "8",  label: "৮ম শ্রেণি",   short: "৮ম" },
+  { key: "9",  label: "৯ম শ্রেণি",   short: "৯ম" },
+  { key: "10", label: "১০ম শ্রেণি",  short: "১০ম" }
+];
+
+const JUNIOR_SUBJECTS = [
+  "বাংলা", "ইংরেজি", "গণিত", "বিজ্ঞান", "ইতিহাস ও সামাজিক বিজ্ঞান",
+  "ডিজিটাল প্রযুক্তি", "স্বাস্থ্য সুরক্ষা", "ধর্ম ও নৈতিক শিক্ষা",
+  "জীবন ও জীবিকা", "শিল্প ও সংস্কৃতি"
+];
+const SSC_SUBJECTS = [
+  "বাংলা", "ইংরেজি", "গণিত", "বিজ্ঞান", "পদার্থবিজ্ঞান", "রসায়ন", "জীববিজ্ঞান",
+  "উচ্চতর গণিত", "ইতিহাস", "ভূগোল", "অর্থনীতি", "পৌরনীতি", "হিসাববিজ্ঞান",
+  "ফিন্যান্স ও ব্যাংকিং", "ব্যবসায় উদ্যোগ", "কৃষিশিক্ষা", "গার্হস্থ্য বিজ্ঞান",
+  "ধর্ম ও নৈতিক শিক্ষা", "তথ্য ও যোগাযোগ প্রযুক্তি"
+];
+const SUBJECTS_BY_CLASS = {
+  "6": JUNIOR_SUBJECTS,
+  "7": JUNIOR_SUBJECTS,
+  "8": JUNIOR_SUBJECTS,
+  "9": SSC_SUBJECTS,
+  "10": SSC_SUBJECTS
+};
+
+const RELIGIONS = [
+  { key: "islam",     label: "ইসলাম",    short: "ইধ" },
+  { key: "hindu",     label: "হিন্দু",    short: "হিধ" },
+  { key: "buddhist",  label: "বৌদ্ধ",     short: "বৌধ" },
+  { key: "christian", label: "খ্রিস্টান", short: "খ্রিধ" }
+];
+
+const NO_SUBJECT = "__none__";
+const OTHER_SUBJECT = "__other__";
+const TOTAL_ROOMS = 30;
+const RELIGION_SUBJECT = "ধর্ম ও নৈতিক শিক্ষা"; // এই বিষয় হলেই শুধু ধর্মভিত্তিক ব্রেকডাউন লাগবে
+
+let currentRoomData = null;
+let allRoomsCache = {};
+
+/* ---------- multi-day exam state ---------- */
+let currentExamDay = localStorage.getItem('currentExamDay') || todayStr();
+let examDaysCache = {};       // { "2026-09-17": { label: "১ম দিন", createdAt: ... }, ... }
+let roomsListenerRef = null;  // active Firebase ref with an attached 'value' listener
+let formDirty = false;        // true যখন সার্ভারে/ড্রাফটে সংরক্ষণ না হওয়া পরিবর্তন আছে
+let loadingForm = false;      // true যখন প্রোগ্রাম্যাটিকভাবে ফর্মে ডাটা বসানো হচ্ছে (draft/dirty ট্র্যাক করা হবে না)
+let deferredInstallPrompt = null;
+
+function dayRoomsRef(day) { return rtdb.ref('examData/' + day + '/rooms'); }
+function daysMetaRef() { return rtdb.ref('examMeta/days'); }
+function draftKey(day, roomNum) { return 'examDraft::' + day + '::room-' + roomNum; }
+
+function toBnNum(n) {
+  const digits = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+  return String(n).replace(/[0-9]/g, d => digits[d]);
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function bnDate(s) {
+  if (!s) return '';
+  const parts = String(s).split('-');
+  if (parts.length !== 3) return toBnNum(s);
+  return toBnNum(parts[2] + '/' + parts[1] + '/' + parts[0]);
+}
+
+function switchTab(tab) {
+  const entryEl = document.getElementById('entryTab');
+  const summaryEl = document.getElementById('summaryTab');
+  entryEl.style.display = tab === 'entry' ? '' : 'none';
+  summaryEl.style.display = tab === 'summary' ? '' : 'none';
+  document.getElementById('tabEntryBtn').classList.toggle('active', tab === 'entry');
+  document.getElementById('tabSummaryBtn').classList.toggle('active', tab === 'summary');
+  const activeEl = tab === 'entry' ? entryEl : summaryEl;
+  activeEl.classList.remove('tab-fade');
+  void activeEl.offsetWidth; // reflow so the animation re-triggers every switch
+  activeEl.classList.add('tab-fade');
+  window.scrollTo({ top: 0 });
+}
+
+function setupHeaderScrollCompact() {
+  const header = document.querySelector('header');
+  if (!header) return;
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('compact', window.scrollY > 28);
+  }, { passive: true });
+}
+
+function buildRoomSelect() {
+  const sel = document.getElementById('roomSelect');
+  sel.innerHTML = '';
+  for (let i = 1; i <= TOTAL_ROOMS; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = 'কক্ষ নং ' + toBnNum(i);
+    sel.appendChild(opt);
+  }
+  let lastRoomValue = sel.value;
+  sel.addEventListener('change', async () => {
+    const chosen = sel.value;
+    const prev = lastRoomValue;
+    await loadRoom(chosen, { previousRoom: prev });
+    lastRoomValue = sel.value; // loadRoom may have reverted sel.value if user cancelled
+  });
+}
+
+/* ---------- simultaneous multi-class entry ---------- */
+
+function currentRoom() { return document.getElementById('roomSelect').value; }
+
+function subjectOptionsHtml(clsKey) {
+  const list = SUBJECTS_BY_CLASS[clsKey] || [];
+  let html = `<option value="${NO_SUBJECT}">— এই শ্রেণির পরীক্ষা নেই —</option>`;
+  html += list.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  html += `<option value="${OTHER_SUBJECT}">অন্যান্য (লিখে দিন)</option>`;
+  return html;
+}
+
+/* ---------- শ্রেণি একটির পর একটি যোগ করা (dropdown) ---------- */
+
+let activeClassKeys = []; // এই মুহূর্তে কার্ড হিসেবে দেখানো শ্রেণিগুলোর key, যোগ করার ক্রম অনুযায়ী
+
+function classByKey(key) { return CLASSES.find(c => c.key === key); }
+
+function toggleNoClassNote() {
+  const note = document.getElementById('noClassNote');
+  if (note) note.style.display = activeClassKeys.length === 0 ? '' : 'none';
+}
+
+function refreshAddClassSelect() {
+  const sel = document.getElementById('addClassSelect');
+  const btn = document.getElementById('addClassBtn');
+  if (!sel) return;
+  const remaining = CLASSES.filter(c => activeClassKeys.indexOf(c.key) === -1);
+  if (remaining.length === 0) {
+    sel.innerHTML = `<option value="">— সব শ্রেণি যোগ করা হয়ে গেছে —</option>`;
+    sel.disabled = true;
+    if (btn) btn.disabled = true;
+  } else {
+    sel.innerHTML = remaining.map(c => `<option value="${c.key}">${esc(c.label)}</option>`).join('');
+    sel.disabled = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function addClassCard(key) {
+  key = key || document.getElementById('addClassSelect').value;
+  if (!key || activeClassKeys.indexOf(key) !== -1) return null;
+  const cls = classByKey(key);
+  if (!cls) return null;
+  activeClassKeys.push(key);
+
+  const wrap = document.getElementById('classCards');
+  const card = document.createElement('div');
+  card.className = 'class-card';
+  card.id = 'classCard_' + cls.key;
+  card.innerHTML = `
+    <div class="class-card-head">
+      <div class="class-name-wrap">
+        <div class="class-icon">${cls.short}</div>
+        <div class="class-name">${cls.label}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="class-total" id="classTotal_${cls.key}">০ জন উপস্থিত</div>
+        <button type="button" class="class-remove-btn" aria-label="এই শ্রেণি বাদ দিন" onclick="removeClassCard('${cls.key}')">${icon('x')}</button>
+      </div>
+    </div>
+    <div class="subject-row">
+      <label>এই শ্রেণিতে আজ পরীক্ষা আছে কি? থাকলে বিষয় বেছে নিন</label>
+      <select id="subject_${cls.key}" onchange="onSubjectChange('${cls.key}')">${subjectOptionsHtml(cls.key)}</select>
+      <input type="text" id="subjectOther_${cls.key}" placeholder="বিষয়ের নাম লিখুন" style="display:none; margin-top:8px;" oninput="onOtherInput('${cls.key}')">
+    </div>
+    <div id="fields_${cls.key}"></div>
+  `;
+  wrap.appendChild(card);
+  renderFieldsForClass(cls.key);
+  refreshAddClassSelect();
+  toggleNoClassNote();
+  return card;
+}
+
+function removeClassCard(key) {
+  const idx = activeClassKeys.indexOf(key);
+  if (idx === -1) return;
+  const cls = classByKey(key);
+  if (!confirm(`"${cls ? cls.label : ''}" শ্রেণিটি ফর্ম থেকে বাদ দিতে চান? এর তথ্য মুছে যাবে।`)) return;
+  activeClassKeys.splice(idx, 1);
+  const card = document.getElementById('classCard_' + key);
+  if (card) card.remove();
+  refreshAddClassSelect();
+  toggleNoClassNote();
+  recalc();
+  onFormInput();
+}
+
+function resetClassCards() {
+  activeClassKeys = [];
+  const wrap = document.getElementById('classCards');
+  if (wrap) wrap.innerHTML = '';
+  refreshAddClassSelect();
+  toggleNoClassNote();
+}
+
+function religionFieldsHtml(clsKey) {
+  return `<div class="religion-grid">
+    ${RELIGIONS.map(r => `
+      <div class="religion-item">
+        <label>${r.label}</label>
+        <div class="stepper">
+          <button type="button" class="stepper-btn" aria-label="কমান" onclick="stepInput('input_${clsKey}_${r.key}',-1)">−</button>
+          <input type="number" min="0" inputmode="numeric" id="input_${clsKey}_${r.key}" value="0" oninput="recalc(); onFormInput();">
+          <button type="button" class="stepper-btn" aria-label="বাড়ান" onclick="stepInput('input_${clsKey}_${r.key}',1)">+</button>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function generalFieldHtml(clsKey) {
+  return `<div class="field general-field" style="margin-bottom:0;">
+    <label>মোট কতজন উপস্থিত</label>
+    <div class="stepper">
+      <button type="button" class="stepper-btn" aria-label="কমান" onclick="stepInput('input_${clsKey}_general',-1)">−</button>
+      <input type="number" min="0" inputmode="numeric" id="input_${clsKey}_general" value="0" oninput="recalc(); onFormInput();">
+      <button type="button" class="stepper-btn" aria-label="বাড়ান" onclick="stepInput('input_${clsKey}_general',1)">+</button>
+    </div>
+  </div>`;
+}
+
+function stepInput(id, delta) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const v = parseInt(el.value, 10);
+  el.value = Math.max(0, (isNaN(v) ? 0 : v) + delta);
+  recalc();
+  onFormInput();
+}
+
+function renderFieldsForClass(clsKey) {
+  const subject = getSubjectValue(clsKey);
+  const wrap = document.getElementById(`fields_${clsKey}`);
+  if (!subject) {
+    wrap.innerHTML = `<p class="no-exam-note">এই শ্রেণির জন্য কোনো সংখ্যা লাগবে না।</p>`;
+  } else if (subject === RELIGION_SUBJECT) {
+    wrap.innerHTML = religionFieldsHtml(clsKey);
+  } else {
+    wrap.innerHTML = generalFieldHtml(clsKey);
+  }
+}
+
+function onSubjectChange(clsKey) {
+  const sel = document.getElementById('subject_' + clsKey);
+  const other = document.getElementById('subjectOther_' + clsKey);
+  const isOther = sel.value === OTHER_SUBJECT;
+  other.style.display = isOther ? '' : 'none';
+  if (isOther) other.focus();
+  renderFieldsForClass(clsKey);
+  recalc();
+  onFormInput();
+}
+
+function onOtherInput(clsKey) {
+  renderFieldsForClass(clsKey);
+  recalc();
+  onFormInput();
+}
+
+function setSubjectValue(clsKey, name) {
+  const sel = document.getElementById('subject_' + clsKey);
+  const other = document.getElementById('subjectOther_' + clsKey);
+  const list = SUBJECTS_BY_CLASS[clsKey] || [];
+  if (!name) {
+    sel.value = NO_SUBJECT; other.value = ''; other.style.display = 'none';
+  } else if (list.indexOf(name) !== -1) {
+    sel.value = name; other.value = ''; other.style.display = 'none';
+  } else {
+    sel.value = OTHER_SUBJECT; other.value = name; other.style.display = '';
+  }
+  renderFieldsForClass(clsKey);
+}
+
+function getSubjectValue(clsKey) {
+  const sel = document.getElementById('subject_' + clsKey);
+  if (sel.value === NO_SUBJECT) return '';
+  if (sel.value === OTHER_SUBJECT) return document.getElementById('subjectOther_' + clsKey).value.trim();
+  return sel.value;
+}
+
+function getClassTotal(clsKey) {
+  const subject = getSubjectValue(clsKey);
+  if (!subject) return 0;
+  if (subject === RELIGION_SUBJECT) {
+    let t = 0;
+    RELIGIONS.forEach(r => {
+      const el = document.getElementById(`input_${clsKey}_${r.key}`);
+      const v = el ? parseInt(el.value, 10) : 0;
+      t += isNaN(v) || v < 0 ? 0 : v;
+    });
+    return t;
+  }
+  const el = document.getElementById(`input_${clsKey}_general`);
+  const v = el ? parseInt(el.value, 10) : 0;
+  return isNaN(v) || v < 0 ? 0 : v;
+}
+
+function recalc() {
+  let roomTotal = 0;
+  activeClassKeys.forEach(key => {
+    const t = getClassTotal(key);
+    const totalEl = document.getElementById(`classTotal_${key}`);
+    if (totalEl) totalEl.textContent = toBnNum(t) + ' জন উপস্থিত';
+    roomTotal += t;
+  });
+  document.getElementById('roomTotal').textContent = toBnNum(roomTotal);
+}
+
+function setStatusBanner(exists, updatedAt, by) {
+  const el = document.getElementById('statusBanner');
+  if (exists) {
+    let when = '';
+    try { when = updatedAt ? new Date(updatedAt).toLocaleString('bn-BD') : ''; } catch (e) {}
+    el.innerHTML = `<div class="status-banner exists">${icon('checkCircle')} এই কক্ষের তথ্য আগে জমা দেওয়া হয়েছে${by ? ' (' + esc(by) + ')' : ''}${when ? ' — ' + when : ''}। এডিট করে আবার সংরক্ষণ করতে পারবেন।</div>`;
+  } else {
+    el.innerHTML = `<div class="status-banner new">${icon('sparkles')} এই কক্ষের জন্য এখনো কোনো তথ্য দেওয়া হয়নি।</div>`;
+  }
+}
+
+async function loadRoom(roomNum, opts) {
+  opts = opts || {};
+  if (!opts.skipDirtyCheck && !(await confirmLeaveIfDirty())) {
+    // ব্যবহারকারী থেকে গেলেন — সিলেক্টর আগের কক্ষে ফিরিয়ে দিন
+    document.getElementById('roomSelect').value = opts.previousRoom || roomNum;
+    return;
+  }
+  document.getElementById('submitMsg').textContent = '';
+  document.getElementById('roomChip').textContent = 'কক্ষ ' + toBnNum(roomNum);
+  currentRoomData = null;
+  let serverOk = false;
+  try {
+    const snap = await dayRoomsRef(currentExamDay).child('room-' + roomNum).once('value');
+    if (snap.exists()) currentRoomData = snap.val();
+    serverOk = true;
+  } catch (e) {}
+
+  const draft = readDraftLocal(currentExamDay, roomNum);
+  let dataToShow = currentRoomData;
+  let showDraftNote = false;
+  if (draft) {
+    const serverTime = currentRoomData && currentRoomData.updatedAt ? new Date(currentRoomData.updatedAt).getTime() : 0;
+    const draftTime = draft.savedAt ? new Date(draft.savedAt).getTime() : 0;
+    if (!serverOk || draftTime > serverTime) {
+      dataToShow = draft;
+      showDraftNote = true;
+    }
+  }
+
+  loadingForm = true;
+  fillFormFromData(dataToShow);
+  loadingForm = false;
+  formDirty = showDraftNote; // অসিঙ্ক করা খসড়া থাকলে এখনও "unsaved" হিসেবে গণ্য হবে
+  updateDraftNote(showDraftNote);
+  setStatusBanner(!!currentRoomData, currentRoomData && currentRoomData.updatedAt, currentRoomData && currentRoomData.invigilatorName);
+  if (!serverOk) {
+    const banner = document.getElementById('statusBanner');
+    banner.innerHTML = '<div class="status-banner new">' + icon('wifiOff') + ' অফলাইন — সার্ভার থেকে তথ্য আনা যায়নি। ' + (draft ? 'স্থানীয় খসড়া দেখানো হচ্ছে।' : 'আগে কিছু সংরক্ষণ করা থাকলে ইন্টারনেট ফিরলে দেখা যাবে।') + '</div>' + banner.innerHTML;
+  }
+}
+
+function fillFormFromData(data) {
+  document.getElementById('invigilatorName').value = (data && data.invigilatorName) || '';
+  resetClassCards();
+  const dataClasses = (data && data.classes) || {};
+  CLASSES.forEach(cls => {
+    const cd = dataClasses[cls.key];
+    if (!cd) return; // আগে এই শ্রেণি যোগ করা ছিল না — কার্ড হিসেবে দেখানোর দরকার নেই
+    addClassCard(cls.key);
+    setSubjectValue(cls.key, cd.subject || '');
+    if (cd.subject === RELIGION_SUBJECT) {
+      RELIGIONS.forEach(r => {
+        const el = document.getElementById(`input_${cls.key}_${r.key}`);
+        if (el) el.value = cd[r.key] || 0;
+      });
+    } else if (cd.subject) {
+      const el = document.getElementById(`input_${cls.key}_general`);
+      if (el) el.value = cd.general || 0;
+    }
+  });
+  recalc();
+}
+
+async function submitRoomData() {
+  const btn = document.getElementById('submitBtn');
+  const msg = document.getElementById('submitMsg');
+  const roomNum = currentRoom();
+  const invigilatorName = document.getElementById('invigilatorName').value.trim();
+
+  if (!invigilatorName) {
+    msg.className = 'msg err';
+    msg.textContent = 'পর্যবেক্ষক শিক্ষকের নাম লিখুন।';
+    return;
+  }
+  if (activeClassKeys.length === 0) {
+    msg.className = 'msg err';
+    msg.textContent = 'অন্তত একটি শ্রেণি যোগ করুন।';
+    return;
+  }
+
+  const classes = collectClassesFromForm();
+
+  const payload = {
+    roomNumber: parseInt(roomNum, 10),
+    invigilatorName,
+    examDate: currentExamDay,
+    classes,
+    updatedAt: new Date().toISOString()
+  };
+
+  btn.disabled = true;
+  msg.className = 'msg';
+  msg.textContent = 'সংরক্ষণ হচ্ছে...';
+  try {
+    await dayRoomsRef(currentExamDay).child('room-' + roomNum).set(payload);
+    currentRoomData = payload;
+    msg.className = 'msg ok';
+    msg.innerHTML = `<span class="msg-icon-pop">${icon('checkCircle')}</span> এই কক্ষের সব শ্রেণির তথ্য সফলভাবে সংরক্ষিত হয়েছে!`;
+    setStatusBanner(true, payload.updatedAt, payload.invigilatorName);
+    clearDraftLocal(currentExamDay, roomNum);
+    formDirty = false;
+    updateDraftNote(false);
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = 'সংরক্ষণে সমস্যা হয়েছে (' + esc((e && e.message) || 'unknown') + ')। ইন্টারনেট সংযোগ নেই বলে মনে হচ্ছে — চিন্তা নেই, তথ্য স্থানীয়ভাবে খসড়া হিসেবে সংরক্ষিত আছে, ইন্টারনেট ফিরলে আবার "সংরক্ষণ করুন" চাপুন।';
+    saveDraftLocal(true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function recalcClassTotal(classObj) {
+  let total = classObj.general || 0;
+  RELIGIONS.forEach(r => { total += classObj[r.key] || 0; });
+  classObj.total = total;
+  return total;
+}
+
+/* ---------- offline draft save (localStorage) ---------- */
+
+function collectClassesFromForm() {
+  const classes = {};
+  activeClassKeys.forEach(key => {
+    const subject = getSubjectValue(key);
+    const obj = { subject, general: 0, islam: 0, hindu: 0, buddhist: 0, christian: 0 };
+    if (subject === RELIGION_SUBJECT) {
+      RELIGIONS.forEach(r => {
+        const el = document.getElementById(`input_${key}_${r.key}`);
+        const v = el ? parseInt(el.value, 10) : 0;
+        obj[r.key] = isNaN(v) || v < 0 ? 0 : v;
+      });
+    } else if (subject) {
+      const el = document.getElementById(`input_${key}_general`);
+      const v = el ? parseInt(el.value, 10) : 0;
+      obj.general = isNaN(v) || v < 0 ? 0 : v;
+    }
+    recalcClassTotal(obj);
+    classes[key] = obj;
+  });
+  return classes;
+}
+
+function saveDraftLocal(force) {
+  if (loadingForm && !force) return;
+  try {
+    const roomNum = currentRoom();
+    const draft = {
+      roomNumber: parseInt(roomNum, 10),
+      invigilatorName: document.getElementById('invigilatorName').value.trim(),
+      examDate: currentExamDay,
+      classes: collectClassesFromForm(),
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(draftKey(currentExamDay, roomNum), JSON.stringify(draft));
+  } catch (e) {}
+}
+
+function readDraftLocal(day, roomNum) {
+  try {
+    const raw = localStorage.getItem(draftKey(day, roomNum));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function clearDraftLocal(day, roomNum) {
+  try { localStorage.removeItem(draftKey(day, roomNum)); } catch (e) {}
+}
+
+function updateDraftNote(show) {
+  const note = document.getElementById('draftNote');
+  if (note) note.classList.toggle('show', !!show);
+}
+
+/* ---------- unsaved-changes tracking ---------- */
+
+function onFormInput() {
+  if (loadingForm) return;
+  formDirty = true;
+  saveDraftLocal();
+  updateDraftNote(true);
+}
+
+function setupUnsavedWarning() {
+  window.addEventListener('beforeunload', (e) => {
+    if (formDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
+}
+
+function confirmLeaveIfDirty() {
+  if (!formDirty) return Promise.resolve(true);
+  const ok = confirm('এই কক্ষের কিছু পরিবর্তন এখনো সার্ভারে "সংরক্ষণ করুন" চাপা হয়নি (এটা স্থানীয়ভাবে খসড়া হিসেবে থাকবে, হারাবে না)। আপনি কি তারপরও অন্য কক্ষ/দিনে যেতে চান?');
+  return Promise.resolve(ok);
+}
+
+/* ---------- aggregation ---------- */
+
+function computeTotals() {
+  const rooms = allRoomsCache;
+  const roomIds = Object.keys(rooms);
+  let totalPresent = 0;
+  const classTotals = {};
+  CLASSES.forEach(c => { classTotals[c.key] = { islam:0, hindu:0, buddhist:0, christian:0, general:0, total:0 }; });
+  const religionGrand = { islam:0, hindu:0, buddhist:0, christian:0 };
+  let generalGrand = 0;
+  const subjectMap = {}; // "class|subject" -> counts
+
+  roomIds.forEach(id => {
+    const data = rooms[id];
+    if (!data || !data.classes) return;
+    CLASSES.forEach(c => {
+      const cd = data.classes[c.key];
+      if (!cd) return;
+      const subj = (typeof cd.subject === 'string' && cd.subject) ? cd.subject : (data.subject || '—');
+      const isReligionSubject = subj === RELIGION_SUBJECT;
+      let t = 0;
+      if (isReligionSubject) {
+        RELIGIONS.forEach(r => {
+          const v = cd[r.key] || 0;
+          classTotals[c.key][r.key] += v;
+          religionGrand[r.key] += v;
+          totalPresent += v;
+          t += v;
+        });
+      } else {
+        const v = cd.general || 0;
+        classTotals[c.key].general += v;
+        generalGrand += v;
+        totalPresent += v;
+        t += v;
+      }
+      classTotals[c.key].total += t;
+      if (t > 0) {
+        const k = c.key + '|' + subj;
+        if (!subjectMap[k]) subjectMap[k] = { clsKey: c.key, subject: subj, isReligionSubject, islam:0, hindu:0, buddhist:0, christian:0, general:0, total:0 };
+        if (isReligionSubject) RELIGIONS.forEach(r => { subjectMap[k][r.key] += (cd[r.key] || 0); });
+        else subjectMap[k].general += (cd.general || 0);
+        subjectMap[k].total += t;
+      }
+    });
+  });
+
+  const subjectRows = Object.values(subjectMap).sort((a,b) =>
+    a.clsKey === b.clsKey ? a.subject.localeCompare(b.subject, 'bn') : (parseInt(a.clsKey) - parseInt(b.clsKey))
+  );
+  return { rooms, roomIds, totalPresent, classTotals, religionGrand, generalGrand, subjectRows };
+}
+
+function renderSummary() {
+  const T = computeTotals();
+
+  document.getElementById('statTotalPresent').textContent = toBnNum(T.totalPresent);
+  document.getElementById('statRoomsDone').textContent = toBnNum(T.roomIds.length) + '/' + toBnNum(TOTAL_ROOMS);
+  const uniqueSubjects = new Set(T.subjectRows.map(r => r.subject));
+  document.getElementById('statSubjects').textContent = toBnNum(uniqueSubjects.size);
+
+  // subject-wise
+  const sBody = document.getElementById('subjectSummaryBody');
+  sBody.innerHTML = T.subjectRows.map(r => {
+    const cls = CLASSES.find(c => c.key === r.clsKey);
+    return `<tr>
+      <td class="l" style="font-weight:700;">${esc(r.subject)}</td>
+      <td>${cls ? cls.short : ''}</td>
+      <td>${toBnNum(r.islam)}</td><td>${toBnNum(r.hindu)}</td>
+      <td>${toBnNum(r.buddhist)}</td><td>${toBnNum(r.christian)}</td>
+      <td>${toBnNum(r.general)}</td>
+      <td style="font-weight:800; color:var(--primary);">${toBnNum(r.total)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('subjectSummaryEmpty').style.display = T.subjectRows.length ? 'none' : '';
+
+  // class summary
+  document.getElementById('classSummaryBody').innerHTML = CLASSES.map(c => {
+    const ct = T.classTotals[c.key];
+    return `<tr>
+      <td class="l">${c.label}</td>
+      <td>${toBnNum(ct.islam)}</td><td>${toBnNum(ct.hindu)}</td>
+      <td>${toBnNum(ct.buddhist)}</td><td>${toBnNum(ct.christian)}</td>
+      <td>${toBnNum(ct.general)}</td>
+      <td style="font-weight:800;">${toBnNum(ct.total)}</td>
+    </tr>`;
+  }).join('');
+
+  // room summary
+  let rows = '';
+  for (let i = 1; i <= TOTAL_ROOMS; i++) {
+    const data = T.rooms['room-' + i];
+    if (data && data.classes) {
+      let rowTotal = 0;
+      const cells = CLASSES.map(c => {
+        const t = (data.classes[c.key] && data.classes[c.key].total) || 0;
+        rowTotal += t;
+        return `<td>${toBnNum(t)}</td>`;
+      }).join('');
+      rows += `<tr><td class="l">কক্ষ ${toBnNum(i)}</td>${cells}<td style="font-weight:800;">${toBnNum(rowTotal)}</td><td><span class="badge done">জমা হয়েছে</span></td></tr>`;
+    } else {
+      rows += `<tr><td class="l">কক্ষ ${toBnNum(i)}</td><td colspan="5" style="color:var(--text-muted);">— তথ্য নেই —</td><td>—</td><td><span class="badge pending">বাকি আছে</span></td></tr>`;
+    }
+  }
+  document.getElementById('roomSummaryBody').innerHTML = rows;
+
+  // religion grand
+  document.getElementById('religionSummaryBody').innerHTML =
+    RELIGIONS.map(r => `<tr><td class="l">${r.label} ধর্ম</td><td style="font-weight:700;">${toBnNum(T.religionGrand[r.key])}</td></tr>`).join('') +
+    `<tr><td class="l">সাধারণ বিষয়সমূহ (ধর্ম-ব্রেকডাউন ছাড়া)</td><td style="font-weight:700;">${toBnNum(T.generalGrand)}</td></tr>` +
+    `<tr><td class="l" style="font-weight:800;">সর্বমোট</td><td style="font-weight:800; color:var(--primary);">${toBnNum(T.totalPresent)}</td></tr>`;
+
+  updateGlobalProgress(T);
+  renderRoomProgressGrid(T);
+  renderCharts(T);
+}
+
+/* ---------- progress bar + room grid ---------- */
+
+function updateGlobalProgress(T) {
+  const pct = TOTAL_ROOMS ? Math.round((T.roomIds.length / TOTAL_ROOMS) * 100) : 0;
+  const fill = document.getElementById('globalProgressFill');
+  const label = document.getElementById('globalProgressLabel');
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = toBnNum(T.roomIds.length) + '/' + toBnNum(TOTAL_ROOMS) + ' কক্ষ সম্পন্ন (' + toBnNum(pct) + '%)';
+}
+
+function renderRoomProgressGrid(T) {
+  const grid = document.getElementById('roomProgressGrid');
+  if (!grid) return;
+  const pending = [];
+  let html = '';
+  for (let i = 1; i <= TOTAL_ROOMS; i++) {
+    const done = !!(T.rooms['room-' + i] && T.rooms['room-' + i].classes);
+    if (!done) pending.push(i);
+    html += `<button type="button" class="room-chip-cell ${done ? 'done' : 'pending'}" onclick="goToRoom(${i})" title="কক্ষ ${toBnNum(i)} — ${done ? 'জমা হয়েছে' : 'বাকি আছে'}">${toBnNum(i)}</button>`;
+  }
+  grid.innerHTML = html;
+  const note = document.getElementById('pendingRoomsNote');
+  if (note) {
+    note.textContent = pending.length
+      ? ('বাকি আছে: ' + pending.map(toBnNum).join(', ') + ' নং কক্ষ')
+      : '🎉 সব কক্ষের তথ্য জমা হয়ে গেছে!';
+  }
+}
+
+function goToRoom(num) {
+  document.getElementById('roomSelect').value = num;
+  loadRoom(num);
+  switchTab('entry');
+}
+
+/* ---------- charts ---------- */
+
+let classChartInstance = null;
+let religionChartInstance = null;
+
+function renderCharts(T) {
+  if (typeof Chart === 'undefined') return;
+
+  const classLabels = CLASSES.map(c => c.short);
+  const classData = CLASSES.map(c => T.classTotals[c.key].total);
+  const classCtx = document.getElementById('classChart');
+  if (classCtx) {
+    if (classChartInstance) {
+      classChartInstance.data.labels = classLabels;
+      classChartInstance.data.datasets[0].data = classData;
+      classChartInstance.update();
+    } else {
+      classChartInstance = new Chart(classCtx, {
+        type: 'bar',
+        data: { labels: classLabels, datasets: [{ label: 'উপস্থিত শিক্ষার্থী', data: classData, backgroundColor: '#3059d6', borderRadius: 6 }] },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false }, title: { display: true, text: 'শ্রেণিভিত্তিক মোট উপস্থিতি' } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+  }
+
+  const religionLabels = RELIGIONS.map(r => r.label).concat(['সাধারণ']);
+  const religionData = RELIGIONS.map(r => T.religionGrand[r.key]).concat([T.generalGrand]);
+  const religionCtx = document.getElementById('religionChart');
+  if (religionCtx) {
+    if (religionChartInstance) {
+      religionChartInstance.data.labels = religionLabels;
+      religionChartInstance.data.datasets[0].data = religionData;
+      religionChartInstance.update();
+    } else {
+      religionChartInstance = new Chart(religionCtx, {
+        type: 'doughnut',
+        data: {
+          labels: religionLabels,
+          datasets: [{ data: religionData, backgroundColor: ['#3059d6', '#7b4dd8', '#14875a', '#9a6c05', '#c73c55'] }]
+        },
+        options: { responsive: true, plugins: { title: { display: true, text: 'ধর্ম ও সাধারণ বিষয়ভিত্তিক বণ্টন' } } }
+      });
+    }
+  }
+}
+
+/* ---------- excel export ---------- */
+
+function exportExcel() {
+  const msg = document.getElementById('printMsg');
+  if (typeof XLSX === 'undefined') {
+    msg.className = 'msg err';
+    msg.textContent = 'Excel এক্সপোর্ট লাইব্রেরি লোড হয়নি, ইন্টারনেট সংযোগ যাচাই করে আবার চেষ্টা করুন।';
+    return;
+  }
+  const T = computeTotals();
+  const wb = XLSX.utils.book_new();
+
+  const roomHeader = ['কক্ষ', '৬ষ্ঠ', '৭ম', '৮ম', '৯ম', '১০ম', 'মোট', 'অবস্থা'];
+  const roomRows = [roomHeader];
+  for (let i = 1; i <= TOTAL_ROOMS; i++) {
+    const data = T.rooms['room-' + i];
+    if (data && data.classes) {
+      let rowTotal = 0;
+      const cells = CLASSES.map(c => { const t = (data.classes[c.key] && data.classes[c.key].total) || 0; rowTotal += t; return t; });
+      roomRows.push([i, ...cells, rowTotal, 'জমা হয়েছে']);
+    } else {
+      roomRows.push([i, '', '', '', '', '', '', 'বাকি আছে']);
+    }
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(roomRows), 'কক্ষভিত্তিক');
+
+  const subjHeader = ['বিষয়', 'শ্রেণি', 'ইসলাম', 'হিন্দু', 'বৌদ্ধ', 'খ্রিস্টান', 'সাধারণ', 'মোট'];
+  const subjRows = [subjHeader].concat(T.subjectRows.map(r => {
+    const cls = CLASSES.find(c => c.key === r.clsKey);
+    return [r.subject, cls ? cls.label : '', r.islam, r.hindu, r.buddhist, r.christian, r.general, r.total];
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(subjRows), 'বিষয়ভিত্তিক');
+
+  const clsHeader = ['শ্রেণি', 'ইসলাম', 'হিন্দু', 'বৌদ্ধ', 'খ্রিস্টান', 'সাধারণ', 'মোট'];
+  const clsRows = [clsHeader];
+  CLASSES.forEach(c => {
+    const ct = T.classTotals[c.key];
+    clsRows.push([c.label, ct.islam, ct.hindu, ct.buddhist, ct.christian, ct.general, ct.total]);
+  });
+  clsRows.push(['সর্বমোট', T.religionGrand.islam, T.religionGrand.hindu, T.religionGrand.buddhist, T.religionGrand.christian, T.generalGrand, T.totalPresent]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(clsRows), 'শ্রেণিভিত্তিক');
+
+  XLSX.writeFile(wb, 'exam-attendance-' + currentExamDay + '.xlsx');
+  msg.className = 'msg ok';
+  msg.innerHTML = `<span class="msg-icon-pop">${icon('checkCircle')}</span> Excel ফাইল ডাউনলোড হয়েছে।`;
+}
+
+/* ---------- direct PDF export (A4, no print dialog) ---------- */
+
+function exportPdf() {
+  const msg = document.getElementById('printMsg');
+  if (typeof html2pdf === 'undefined') {
+    msg.className = 'msg err';
+    msg.textContent = 'PDF এক্সপোর্ট লাইব্রেরি লোড হয়নি, ইন্টারনেট সংযোগ যাচাই করে আবার চেষ্টা করুন।';
+    return;
+  }
+  buildPrintReport();
+  const el = document.getElementById('printReport');
+  el.classList.add('pdf-capturing');
+  msg.className = 'msg';
+  msg.textContent = 'PDF তৈরি হচ্ছে...';
+
+  const opt = {
+    margin: 8,
+    filename: 'exam-attendance-' + currentExamDay + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+    pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'table'] }
+  };
+
+  html2pdf().set(opt).from(el).save()
+    .then(() => {
+      el.classList.remove('pdf-capturing');
+      msg.className = 'msg ok';
+      msg.innerHTML = `<span class="msg-icon-pop">${icon('checkCircle')}</span> PDF ফাইল ডাউনলোড হয়েছে।`;
+    })
+    .catch(() => {
+      el.classList.remove('pdf-capturing');
+      msg.className = 'msg err';
+      msg.textContent = 'PDF তৈরিতে সমস্যা হয়েছে, আবার চেষ্টা করুন।';
+    });
+}
+
+/* ---------- print ---------- */
+
+function saveMeta() {
+  try {
+    localStorage.setItem('examMeta', JSON.stringify({
+      school: document.getElementById('schoolName').value,
+      exam: document.getElementById('examName').value
+    }));
+  } catch (e) {}
+}
+function loadMeta() {
+  try {
+    const m = JSON.parse(localStorage.getItem('examMeta') || '{}');
+    if (m.school) document.getElementById('schoolName').value = m.school;
+    if (m.exam) document.getElementById('examName').value = m.exam;
+  } catch (e) {}
+}
+
+function buildPrintReport() {
+  const T = computeTotals();
+  const school = document.getElementById('schoolName').value.trim() || 'প্রতিষ্ঠানের নাম';
+  const exam = document.getElementById('examName').value.trim() || 'পরীক্ষার উপস্থিতি প্রতিবেদন';
+
+  const dateText = dayLabelFor(currentExamDay);
+
+  // 1. room-wise detail
+  let detail = '';
+  for (let i = 1; i <= TOTAL_ROOMS; i++) {
+    const data = T.rooms['room-' + i];
+    if (!data || !data.classes) {
+      detail += `<tr><td>${toBnNum(i)}</td><td colspan="8" style="color:#666;">— তথ্য জমা হয়নি —</td></tr>`;
+      continue;
+    }
+    const activeRows = CLASSES.map(c => ({ c, cd: data.classes[c.key] }))
+      .filter(x => x.cd && (x.cd.total || 0) > 0);
+    const list = activeRows.length ? activeRows : [{ c: null, cd: null }];
+    let roomSum = 0;
+    activeRows.forEach(x => { roomSum += (x.cd.total || 0); });
+    list.forEach((x, idx) => {
+      const first = idx === 0;
+      const rowspan = list.length;
+      let cells;
+      if (!x.c) {
+        cells = `<td colspan="8" style="color:#666;">উপস্থিতি ০</td>`;
+      } else {
+        const isRel = x.cd.subject === RELIGION_SUBJECT;
+        cells = `<td>${x.c.label}</td><td class="l">${esc(x.cd.subject || data.subject || '—')}</td>` +
+          RELIGIONS.map(r => `<td>${isRel ? toBnNum(x.cd[r.key] || 0) : '—'}</td>`).join('') +
+          `<td>${isRel ? '—' : toBnNum(x.cd.general || 0)}</td>` +
+          `<td><b>${toBnNum(x.cd.total || 0)}</b></td>`;
+      }
+      detail += `<tr>` +
+        (first ? `<td rowspan="${rowspan}"><b>${toBnNum(i)}</b></td>` : '') +
+        cells +
+        (first ? `<td rowspan="${rowspan}" class="l">${esc(data.invigilatorName || '')}</td>` : '') +
+        `</tr>`;
+    });
+  }
+
+  const subjectRows = T.subjectRows.map(r => {
+    const cls = CLASSES.find(c => c.key === r.clsKey);
+    return `<tr><td class="l">${esc(r.subject)}</td><td>${cls ? cls.label : ''}</td>` +
+      RELIGIONS.map(x => `<td>${r.isReligionSubject ? toBnNum(r[x.key]) : '—'}</td>`).join('') +
+      `<td>${r.isReligionSubject ? '—' : toBnNum(r.general)}</td>` +
+      `<td><b>${toBnNum(r.total)}</b></td></tr>`;
+  }).join('') || `<tr><td colspan="8" style="color:#666;">তথ্য নেই</td></tr>`;
+
+  const classRows = CLASSES.map(c => {
+    const ct = T.classTotals[c.key];
+    return `<tr><td class="l">${c.label}</td>` +
+      RELIGIONS.map(r => `<td>${toBnNum(ct[r.key])}</td>`).join('') +
+      `<td>${toBnNum(ct.general)}</td>` +
+      `<td><b>${toBnNum(ct.total)}</b></td></tr>`;
+  }).join('') +
+  `<tr><td class="l"><b>সর্বমোট</b></td>` +
+  RELIGIONS.map(r => `<td><b>${toBnNum(T.religionGrand[r.key])}</b></td>`).join('') +
+  `<td><b>${toBnNum(T.generalGrand)}</b></td>` +
+  `<td><b>${toBnNum(T.totalPresent)}</b></td></tr>`;
+
+  const relHead = RELIGIONS.map(r => `<th>${r.label}</th>`).join('') + '<th>সাধারণ</th>';
+
+  document.getElementById('printReport').innerHTML = `
+    <h2>${esc(school)}</h2>
+    <p class="p-sub">${esc(exam)} — পরীক্ষার হলে শিক্ষার্থী উপস্থিতির প্রতিবেদন<br>
+      তারিখ: ${dateText} &nbsp;|&nbsp; মোট কক্ষ: ${toBnNum(TOTAL_ROOMS)} &nbsp;|&nbsp;
+      তথ্য জমা: ${toBnNum(T.roomIds.length)} কক্ষ &nbsp;|&nbsp;
+      মোট উপস্থিত: ${toBnNum(T.totalPresent)} জন</p>
+
+    <h3>১। কক্ষভিত্তিক ও বিষয়ভিত্তিক বিস্তারিত উপস্থিতি</h3>
+    <table>
+      <thead><tr><th>কক্ষ</th><th>শ্রেণি</th><th class="l">বিষয়</th>${relHead}<th>মোট</th><th class="l">পর্যবেক্ষক শিক্ষক</th></tr></thead>
+      <tbody>${detail}</tbody>
+    </table>
+
+    <h3>২। বিষয়ভিত্তিক মোট উপস্থিতি (সব কক্ষ মিলিয়ে)</h3>
+    <table>
+      <thead><tr><th class="l">বিষয়</th><th>শ্রেণি</th>${relHead}<th>মোট</th></tr></thead>
+      <tbody>${subjectRows}</tbody>
+    </table>
+
+    <h3>৩। শ্রেণি ও ধর্মভিত্তিক সারসংক্ষেপ</h3>
+    <table>
+      <thead><tr><th class="l">শ্রেণি</th>${relHead}<th>মোট</th></tr></thead>
+      <tbody>${classRows}</tbody>
+    </table>
+
+    <div class="sign-row">
+      <div>হল সুপার</div>
+      <div>পরীক্ষা কমিটির আহ্বায়ক</div>
+      <div>প্রধান শিক্ষক</div>
+    </div>
+  `;
+}
+
+function printAllRooms() {
+  buildPrintReport();
+  const msg = document.getElementById('printMsg');
+  msg.className = 'msg';
+  msg.textContent = '';
+  try {
+    setTimeout(() => window.print(), 120);
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = 'এই ডিভাইসে সরাসরি প্রিন্ট চালু করা যায়নি — নিচের "রিপোর্ট ফাইল ডাউনলোড করুন" বাটন ব্যবহার করুন।';
+  }
+}
+
+async function downloadPrintReport() {
+  const msg = document.getElementById('printMsg');
+  buildPrintReport();
+  const reportHtml = document.getElementById('printReport').innerHTML;
+  const printStyles = `
+    body { font-family: "Noto Sans Bengali","Hind Siliguri",Arial,sans-serif; margin: 20px; color:#000; background:#fff; }
+    h2 { font-size: 17px; margin: 0 0 2px 0; text-align: center; }
+    .p-sub { text-align: center; font-size: 12px; margin: 0 0 14px 0; }
+    h3 { font-size: 14px; margin: 18px 0 8px 0; border-right: 4px solid #000; padding-right: 7px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
+    th, td { border: 1px solid #666; padding: 5px 6px; text-align: center; }
+    th { background: #eee; }
+    td.l, th.l { text-align: right; }
+    .sign-row { display: flex; justify-content: space-between; margin-top: 40px; font-size: 12px; }
+    .sign-row div { border-top: 1px solid #000; padding-top: 5px; width: 30%; text-align: center; }
+    @media print { @page { size: A4 landscape; margin: 12mm; } }
+  `;
+  const fullDoc = `<!DOCTYPE html>
+<html lang="bn"><head><meta charset="UTF-8">
+<title>পরীক্ষার হল - উপস্থিতি প্রতিবেদন</title>
+<style>${printStyles}</style>
+</head><body>${reportHtml}
+<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };<\/script>
+</body></html>`;
+
+  try {
+    const blob = new Blob([fullDoc], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'exam-attendance-report.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    msg.className = 'msg ok';
+    msg.innerHTML = `<span class="msg-icon-pop">${icon('checkCircle')}</span> রিপোর্ট ফাইল ডাউনলোড হয়েছে। সেটি খুলে প্রিন্ট বা "Save as PDF" করুন।`;
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = 'ফাইল ডাউনলোডে সমস্যা হয়েছে, আবার চেষ্টা করুন।';
+  }
+}
+
+/* ---------- PWA: হোম স্ক্রিনে ইনস্টল ---------- */
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function setupPwaInstall() {
+  if (isStandalone() || localStorage.getItem('installBannerDismissed') === '1') return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    document.getElementById('installBanner').classList.add('show');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    dismissInstallBanner();
+  });
+
+  // iOS Safari-তে beforeinstallprompt আসে না, তাই ম্যানুয়াল নির্দেশনা দেখান
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSafari = /safari/i.test(navigator.userAgent) && !/crios|fxios|chrome/i.test(navigator.userAgent);
+  if (isIos && isSafari) {
+    document.getElementById('installBannerText').innerHTML =
+      icon('smartphone') + ' হোম স্ক্রিনে ইনস্টল করতে নিচের শেয়ার (Share) বাটনে চেপে "Add to Home Screen" নির্বাচন করুন।';
+    document.getElementById('installBannerBtn').style.display = 'none';
+    document.getElementById('installBanner').classList.add('show');
+  }
+}
+
+async function doInstallPrompt() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  dismissInstallBanner();
+}
+
+function dismissInstallBanner() {
+  document.getElementById('installBanner').classList.remove('show');
+  try { localStorage.setItem('installBannerDismissed', '1'); } catch (e) {}
+}
+
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+/* ---------- db (Firebase Realtime Database) ---------- */
+
+function initDb() {
+  daysMetaRef().on('value',
+    (snap) => {
+      examDaysCache = snap.val() || {};
+      if (!examDaysCache[currentExamDay]) {
+        // এই দিনটা এখনো তালিকায় নেই — নিজে থেকে যোগ করে দিন যাতে হারিয়ে না যায়
+        daysMetaRef().child(currentExamDay).set({ label: '', createdAt: new Date().toISOString() }).catch(() => {});
+        examDaysCache[currentExamDay] = { label: '' };
+      }
+      renderDayBar();
+    },
+    () => { renderDayBar(); }
+  );
+  subscribeToDay(currentExamDay);
+  loadRoom(document.getElementById('roomSelect').value, { skipDirtyCheck: true });
+}
+
+function subscribeToDay(day) {
+  const banner = document.getElementById('dbStatusBanner');
+  if (roomsListenerRef) { roomsListenerRef.off(); }
+  roomsListenerRef = dayRoomsRef(day);
+  roomsListenerRef.on('value',
+    (snap) => {
+      if (banner) banner.innerHTML = '';
+      allRoomsCache = snap.val() || {};
+      renderSummary();
+      document.body.classList.remove('is-loading');
+    },
+    (err) => {
+      if (banner) banner.innerHTML = '<div class="status-banner new">' + icon('alertTriangle') + ' ডাটাবেসের সাথে সংযোগ করা যায়নি (' + esc((err && err.message) || 'unknown') + ')। firebase-config.js ফাইলে আপনার Firebase কনফিগারেশন এবং ডাটাবেস রুলস ঠিক আছে কিনা যাচাই করুন। ততক্ষণ পর্যন্ত আপনার এন্ট্রি স্থানীয়ভাবে খসড়া হিসেবে সংরক্ষিত থাকবে।</div>';
+      document.body.classList.remove('is-loading');
+    }
+  );
+}
+
+/* ---------- multi-day exam UI ---------- */
+
+function dayLabelFor(dateStr) {
+  const meta = examDaysCache[dateStr];
+  const custom = meta && meta.label ? meta.label : '';
+  return (custom ? custom + ' — ' : '') + bnDate(dateStr);
+}
+
+function renderDayBar() {
+  const bar = document.getElementById('dayBar');
+  if (!bar) return;
+  const days = Object.keys(examDaysCache).sort();
+  bar.innerHTML = days.map(d =>
+    `<button type="button" class="day-chip ${d === currentExamDay ? 'active' : ''}" onclick="requestSwitchExamDay('${d}')">${esc(dayLabelFor(d))}</button>`
+  ).join('') + `<button type="button" class="day-add-btn" onclick="toggleAddDayForm(true)">${icon('plus')} নতুন দিন</button>`;
+  const lbl = document.getElementById('activeDayLabel');
+  if (lbl) lbl.textContent = dayLabelFor(currentExamDay);
+  const lbl2 = document.getElementById('activeDayLabelSummary');
+  if (lbl2) lbl2.textContent = dayLabelFor(currentExamDay);
+}
+
+function toggleAddDayForm(show) {
+  const form = document.getElementById('dayAddForm');
+  form.style.display = show ? 'flex' : 'none';
+  if (show) document.getElementById('newDayDate').value = todayStr();
+}
+
+function confirmAddExamDay() {
+  const date = document.getElementById('newDayDate').value;
+  const label = document.getElementById('newDayLabel').value.trim();
+  if (!date) { alert('দয়া করে একটা তারিখ বাছুন।'); return; }
+  daysMetaRef().child(date).set({ label, createdAt: new Date().toISOString() }).catch(() => {});
+  toggleAddDayForm(false);
+  requestSwitchExamDay(date);
+}
+
+async function requestSwitchExamDay(day) {
+  if (day === currentExamDay) return;
+  if (!(await confirmLeaveIfDirty())) return;
+  currentExamDay = day;
+  localStorage.setItem('currentExamDay', day);
+  renderDayBar();
+  subscribeToDay(day);
+  loadRoom(document.getElementById('roomSelect').value, { skipDirtyCheck: true });
+}
+
+// init
+buildRoomSelect();
+resetClassCards();
+document.getElementById('roomChip').textContent = 'কক্ষ ' + toBnNum(currentRoom());
+loadMeta();
+recalc();
+renderSummary();
+initDb();
+setupUnsavedWarning();
+setupPwaInstall();
+registerServiceWorker();
+setupHeaderScrollCompact();
+</script>
+</body>
+</html>

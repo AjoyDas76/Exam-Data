@@ -14,5 +14,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-// পুরো index.html জুড়ে এই গ্লোবাল ভ্যারিয়েবলটি ব্যবহার হবে
+// পুরো index.html জুড়ে এই গ্লোবাল ভ্যারিয়েবলগুলো ব্যবহার হবে
 const rtdb = firebase.database();
+const auth = firebase.auth();
